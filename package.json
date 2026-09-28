@@ -1,0 +1,12 @@
+{
+  "name": "web-work-shop-root",
+  "private": true,
+  "scripts": {
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "cd backend && cargo watch -x run",
+    "dev": "concurrently -k -p \"[{name}]\" -n \"Astro,Axum\" -c \"cyan,magenta\" \"npm run dev:frontend\" \"npm run dev:backend\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
