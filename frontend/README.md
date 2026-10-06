@@ -30,7 +30,7 @@ To learn more about the folder structure of an Astro project, refer to [our guid
 
 ## 🧞 Commands
 
-All commands are run from the root of the project, from a terminal:
+Run these commands from the `frontend` directory:
 
 | Command                   | Action                                           |
 | :------------------------ | :----------------------------------------------- |
