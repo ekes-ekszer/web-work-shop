@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "rust-lang.rust-analyzer",
+    "tamasfe.even-better-toml",
+    "astro-build.astro-vscode",
+    "svelte.svelte-vscode",
+    "esbenp.prettier-vscode",
+    "usernamehw.error-lens",
+    "eamodio.gitlens",
+    "humao.rest-client"
+  ]
+}

@@ -18,5 +18,9 @@ build:
     cargo build --manifest-path apps/backend/Cargo.toml
 
 check:
-    npm --prefix apps/frontend run build
-    cargo check --manifest-path apps/backend/Cargo.toml
+    cargo clippy --manifest-path apps/backend/Cargo.toml -- -D warnings
+    npm --prefix apps/frontend run check
+
+fmt:
+    cargo fmt --manifest-path apps/backend/Cargo.toml
+    npm --prefix apps/frontend run format
