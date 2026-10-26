@@ -4,6 +4,9 @@ install:
     npm --prefix apps/frontend install
     cargo fetch --manifest-path apps/backend/Cargo.toml
 
+setup-hooks:
+    install -m 755 .githooks/prepare-commit-msg .git/hooks/prepare-commit-msg
+
 frontend:
     npm --prefix apps/frontend run dev
 

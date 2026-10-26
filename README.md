@@ -19,6 +19,18 @@ just install
 
 This installs the frontend dependencies and downloads the Rust dependencies.
 
+## Git hooks
+
+Install the repository's local Git hooks with:
+
+```sh
+just setup-hooks
+```
+
+The `prepare-commit-msg` hook prefixes commit messages on branches such as
+`feat/be/13-jewelry-model` with `feat(be): `. Re-running the hook does not
+duplicate an existing prefix.
+
 ## Run in development
 
 Start both services with one command:
