@@ -1,4 +1,4 @@
-# Canonical branch schema used by .github/workflows/create-branch.yml.
-# Issue labels must include one `type: <value>` and one `area: <value>` label.
-branchName: '<type>/<area>/<issue.number>-<issue.title>'
+# Reference configuration for the issue-branch automation.
+# The workflow validates values against .github/taxonomy.json.
+branchName: '<type>/<area>/<issue.number>-<slug>'
 mode: auto

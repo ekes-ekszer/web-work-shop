@@ -24,6 +24,9 @@ check:
     cargo clippy --manifest-path apps/backend/Cargo.toml -- -D warnings
     npm --prefix apps/frontend run check
 
+check-automation:
+    node .github/scripts/test-automation.mjs
+
 fmt:
     cargo fmt --manifest-path apps/backend/Cargo.toml
     npm --prefix apps/frontend run format

@@ -36,13 +36,20 @@ duplicate an existing prefix.
 Assigning an issue creates a remote branch using the
 `<type>/<area>/<issue#>-<slug>` schema. Issues must have one `type: <value>`
 label and one `area: <value>` label, such as `type: feat` and `area: be`.
-The branch is created from the repository's default branch.
+Exactly one of each label is required, and values must be listed in
+[`.github/taxonomy.json`](./.github/taxonomy.json). The branch is created from
+the repository's default branch. If the branch already exists, it is reused and
+the issue receives a link to it. Missing or unsupported labels fail clearly
+instead of creating a malformed branch.
 
 Pull request titles are checked against Conventional Commits by the
 `Semantic PR title` workflow. Titles must use one of the supported types and
-include a project scope, for example `feat(be): add jewelry model`. Configure
-the `Semantic PR title` job as a required status check in the repository branch
-protection rules to block invalid titles from being merged.
+include a project scope, for example `feat(be): add jewelry model`. The
+`Semantic PR title` job is configured as a required status check on `main`.
+
+The workflows need Actions write permission for branch creation and issue
+comments. Run `just check-automation` to validate the branch schema, taxonomy,
+and title-slug behavior locally.
 
 ## Run in development
 

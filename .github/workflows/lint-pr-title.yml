@@ -13,24 +13,27 @@ jobs:
     name: Semantic PR title
     runs-on: ubuntu-latest
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Load commit taxonomy
+        id: taxonomy
+        shell: bash
+        run: |
+          {
+            echo 'types<<EOF'
+            jq -r '.types[]' .github/taxonomy.json
+            echo EOF
+            echo 'scopes<<EOF'
+            jq -r '.scopes[]' .github/taxonomy.json
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+
       - name: Validate PR title
         uses: amannn/action-semantic-pull-request@v6
         with:
-          types: |
-            feat
-            fix
-            chore
-            docs
-            refactor
-            spike
-            perf
-            test
-          scopes: |
-            be
-            fe
-            3d
-            asset
-            devops
+          types: ${{ steps.taxonomy.outputs.types }}
+          scopes: ${{ steps.taxonomy.outputs.scopes }}
           requireScope: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
