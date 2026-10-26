@@ -38,6 +38,12 @@ Assigning an issue creates a remote branch using the
 label and one `area: <value>` label, such as `type: feat` and `area: be`.
 The branch is created from the repository's default branch.
 
+Pull request titles are checked against Conventional Commits by the
+`Semantic PR title` workflow. Titles must use one of the supported types and
+include a project scope, for example `feat(be): add jewelry model`. Configure
+the `Semantic PR title` job as a required status check in the repository branch
+protection rules to block invalid titles from being merged.
+
 ## Run in development
 
 Start both services with one command:
