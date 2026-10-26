@@ -1,0 +1,4 @@
+# Reference configuration for the issue-branch automation.
+# The workflow validates values against .github/taxonomy.json.
+branchName: '<type>/<area>/<issue.number>-<slug>'
+mode: auto

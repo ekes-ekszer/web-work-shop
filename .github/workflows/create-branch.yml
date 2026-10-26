@@ -1,0 +1,65 @@
+name: Create issue branch
+
+on:
+  issues:
+    types: [assigned]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  create-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Create branch from issue metadata
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const taxonomy = require("./.github/taxonomy.json");
+            const { getBranchMetadata } = require("./.github/scripts/branch-metadata.cjs");
+            const issue = context.payload.issue;
+            let branchName;
+            try {
+              ({ branchName } = getBranchMetadata(issue, taxonomy));
+            } catch (error) {
+              core.setFailed(error.message);
+              return;
+            }
+            const { owner, repo } = context.repo;
+            const branchUrl = `https://github.com/${owner}/${repo}/tree/${branchName}`;
+            const repository = await github.rest.repos.get({ owner, repo });
+            const baseRef = await github.rest.git.getRef({
+              owner,
+              repo,
+              ref: `heads/${repository.data.default_branch}`,
+            });
+            let branchAlreadyExists = false;
+
+            try {
+              await github.rest.git.createRef({
+                owner,
+                repo,
+                ref: `refs/heads/${branchName}`,
+                sha: baseRef.data.object.sha,
+              });
+            } catch (error) {
+              if (error.status !== 422) {
+                throw error;
+              }
+
+              branchAlreadyExists = true;
+              core.info(`Branch ${branchName} already exists; reusing it.`);
+            }
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: issue.number,
+              body: `Branch [\`${branchName}\`](${branchUrl}) is ready.${
+                branchAlreadyExists ? " The existing branch was reused." : ""
+              }`,
+            });
