@@ -1,0 +1,68 @@
+name: Create issue branch
+
+on:
+  issues:
+    types: [assigned]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  create-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create branch from issue metadata
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const labels = issue.labels.map((label) =>
+              typeof label === "string" ? label : label.name
+            );
+            const type = labels.find((label) => label.startsWith("type: "))?.slice(6).trim();
+            const area = labels.find((label) => label.startsWith("area: "))?.slice(6).trim();
+
+            if (!type || !area) {
+              core.setFailed(
+                `Issue #${issue.number} must have one type: <value> and one area: <value> label.`
+              );
+              return;
+            }
+
+            const slug = issue.title
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, "-")
+              .replace(/^-+|-+$/g, "")
+              .slice(0, 80)
+              .replace(/-+$/g, "");
+            const branchName = `${type}/${area}/${issue.number}-${slug}`;
+            const { owner, repo } = context.repo;
+            const repository = await github.rest.repos.get({ owner, repo });
+            const baseRef = await github.rest.git.getRef({
+              owner,
+              repo,
+              ref: `heads/${repository.data.default_branch}`,
+            });
+
+            try {
+              await github.rest.git.createRef({
+                owner,
+                repo,
+                ref: `refs/heads/${branchName}`,
+                sha: baseRef.data.object.sha,
+              });
+            } catch (error) {
+              if (error.status !== 422) {
+                throw error;
+              }
+
+              core.info(`Branch ${branchName} already exists; leaving it unchanged.`);
+            }
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: issue.number,
+              body: `Branch \`${branchName}\` is ready.`,
+            });

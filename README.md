@@ -31,6 +31,13 @@ The `prepare-commit-msg` hook prefixes commit messages on branches such as
 `feat/be/13-jewelry-model` with `feat(be): `. Re-running the hook does not
 duplicate an existing prefix.
 
+## Issue branches
+
+Assigning an issue creates a remote branch using the
+`<type>/<area>/<issue#>-<slug>` schema. Issues must have one `type: <value>`
+label and one `area: <value>` label, such as `type: feat` and `area: be`.
+The branch is created from the repository's default branch.
+
 ## Run in development
 
 Start both services with one command:
