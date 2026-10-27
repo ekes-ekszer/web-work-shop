@@ -1,89 +1,120 @@
 # Software Requirements Specification (SRS)
 ## Ékes Ékszer
 
-**Version:** 0.0.1  
+**Version:** 0.0.1
 **Status:** Draft
 **Author(s):** Pal Anita, Berkeczi Róbert
-**Date:** 2026.10.12
+**Date:** 2026.10.27
 
 ---
 
-## 1. Executive Summary & Purpose
+## 1. Purpose and Product Scope
 
-* **Objective:** Provide an interactive web-based customizer for multi-strand traditional Hungarian folk dance necklaces, enabling users to visually design and personalize their piece online.
-* **Scope:** 2D/3D real-time visualizer allowing dynamic adjustment of strand counts, bead selection, pattern ordering, and color combinations. Exporting the finalized design into a printable/shareable specification format.
-* **Target Audience:** Serves a dual audience:
-  1. **Buyers / Folk Dancers:** Enables intuitive design creation without technical knowledge.
-  2. **Artisans / Makers:** Streamlines communication by receiving precise design specifications, reducing misinterpretations and back-and-forth messaging.
+Ékes Ékszer is planned as a web application for designing traditional Hungarian
+folk-dance necklaces. Buyers should be able to configure a necklace and share
+its specification with the artisan who will make it.
+
+This specification separates the intended product from the current
+implementation. The repository currently contains a basic Astro frontend and a
+small Rust/Axum backend; the necklace customizer and the other product features
+described below are not implemented yet.
+
+### 1.1 In Scope
+
+- Configure necklace strands and their bead patterns.
+- Preview a design while it is being configured.
+- Produce a design specification that can be shared with the artisan.
+- Provide a foundation for the artisan to review customer designs.
+
+### 1.2 Out of Scope for the Current Implementation
+
+- Customer accounts, authentication, and authorization.
+- Online payments, order fulfillment, or inventory management.
+- Artisan catalog administration.
+- Email delivery, PDF generation, and image export.
 
 ---
 
-## 2. User Roles & Permissions
+## 2. Users and Roles
 
-| Role | Description | Key Permissions |
-| :--- | :--- | :--- |
-| **Guest / Buyer** | Unauthenticated or registered user | Customize necklaces, preview designs, save/export configuration, share design link with the maker. |
-| **Maker / Admin** | Artisan or system administrator | Manage available bead types/colors, view customer orders and design specifications, update product settings. |
+The current application has no user accounts or role-based access control.
 
 ---
 
 ## 3. Functional Requirements
 
-### 3.1 Necklace Customization & Visualization
-* **FR-3.1.1:** Users can specify and adjust the number of strands (rows) on the necklace.
-* **FR-3.1.2:** Users can select bead types, sizes, materials, and colors from a predefined library.
-* **FR-3.1.3:** Users can set and reorder the bead sequence for each strand individually or apply a pattern across multiple strands.
-* **FR-3.1.4:** The system must render a real-time visual preview of the customized necklace upon any configuration change.
-* **FR-3.1.5:** Users can adjust structural parameters such as strand length, spacing, and ribbon/clasp fasteners.
+The requirements in this section describe the planned product. None of the
+customizer or design-sharing requirements are implemented in the current
+repository.
 
-### 3.2 Design Saving & Communication Tools
-* **FR-3.2.1:** Users can export the finished design as a PDF summary or downloadable image file.
-* **FR-3.2.2:** System generates a unique shareable URL/code for each saved configuration so buyers can easily send it to the maker.
-* **FR-3.2.3:** The system generates an itemized bead list (bead count, types, pattern guide) for the artisan to facilitate the handcrafting process.
+### 3.1 Necklace Design
 
----
+* **FR-3.1.1:** The application shall let the buyer configure the number of necklace strands.
+* **FR-3.1.2:** The application shall let the buyer choose beads from a product catalog, including the available types, sizes, materials, and colors.
+* **FR-3.1.3:** The application shall let the buyer define the bead sequence for each strand.
+* **FR-3.1.4:** The application shall display a visual preview of the current design and update it when the configuration changes.
+* **FR-3.1.5:** The application shall let the buyer configure applicable necklace measurements and fastening options.
 
-## 4. Non-Functional Requirements (NFR)
+### 3.2 Design Specification and Sharing
 
-* **Performance:** Real-time visual adjustments (bead recoloring, reordering) must render within 100ms on the client side. Initial page load must be under 2 seconds.
-* **Scalability:** System architecture must support up to 1,000 concurrent interactive sessions without canvas performance degradation.
-* **Usability & UX:** Intuitive drag-and-drop or click-to-place interface optimized for touch devices (smartphones/tablets) and desktop.
-* **Security:** All web communication must be encrypted via SSL/TLS (HTTPS). User data compliance with GDPR regulations.
-* **Compatibility:** Fully functional on modern desktop and mobile browsers (Chrome, Safari, Firefox, Edge).
+* **FR-3.2.1:** The application shall provide a readable summary of a completed design for the artisan.
+* **FR-3.2.2:** The application shall let the buyer share a saved design with the artisan.
+* **FR-3.2.3:** The design summary shall include enough information to identify the selected beads, their sequence, and quantities.
 
----
-
-## 5. System Architecture & Tech Stack (Suggested)
-
-* **Frontend:** React / Next.js + HTML5 Canvas or Three.js / Fabric.js (for real-time bead and necklace rendering)
-* **Backend:** Node.js (Express) or Python (FastAPI)
-* **Database:** PostgreSQL (for storing user accounts, bead catalogs, and saved design JSON structures)
-* **Hosting / Infrastructure:** Vercel / Netlify (Frontend) + Render / AWS (Backend & DB)
+The storage format, retention period, and sharing mechanism have not yet been
+selected. Export formats and email delivery are not required by the current
+implementation.
 
 ---
 
-## 6. UI/UX & Wireframes
+## 4. Non-Functional Requirements
 
-* **Figma Board:** [Link to Figma board]
-* **Key Components:**
-  * Interactive Canvas Area (Center)
-  * Strand & Bead Palette Controls (Sidebar/Bottom Bar)
-  * Design Summary & Export Modal
-
----
-
-## 7. External Integrations & Dependencies
-
-* **PDF Generator:** `jspdf` or server-side renderer for artisan build specification sheets.
-* **Image Export:** HTML5 Canvas `toDataURL` for PNG/JPEG preview generation.
-* **Email Service (Optional):** SendGrid or Resend to send completed design specs directly to the maker's inbox.
+* **Maintainability:** The frontend and backend shall remain independently buildable and runnable.
+* **Compatibility:** The application shall be usable in current desktop and mobile web browsers when the product UI is implemented.
+* **Security:** Any future persistence or sharing feature shall protect customer design data and restrict access to saved designs as appropriate. Authentication and the required access model remain to be specified.
+* **Performance and availability targets:** Numerical targets have not yet been established and shall be defined before production deployment.
 
 ---
 
-## 8. Milestones & Delivery Roadmap
+## 5. Current Implementation and Architecture
 
-- [ ] **Phase 1:** Core Canvas Engine Development (Strand layout & bead rendering algorithms)
-- [ ] **Phase 2:** Customization Controls (Strand count selector, bead picker, sequence manager)
-- [ ] **Phase 3:** Export & Sharing System (Unique link generator, PDF specification sheet output)
-- [ ] **Phase 4:** Maker Dashboard & Catalog Management (Adding/editing beads and colors)
-- [ ] **Phase 5:** Testing, UI Refinement, and Production Release
+### 5.1 Repository Components
+
+| Component | Current implementation |
+| :--- | :--- |
+| Frontend | Astro 7 application in `apps/frontend`, with the Astro React integration configured. |
+| Backend | Rust 2024 application using Axum and Tokio in `apps/backend`. |
+| Data storage | No database or persistent storage is configured. |
+| Local development | The root `justfile` provides commands to run, build, and check both applications. |
+
+---
+
+## 6. User Interface References
+
+* **Figma Board:** [Link to Figma board](https://www.figma.com/design/uZC856mBdonOGqfALBivDy/Untitled?node-id=2-3123&t=kDC6FXlzifmRpawb-1)
+* **Planned primary components:**
+  * Necklace preview.
+  * Strand and bead selection controls.
+  * Design summary for the artisan.
+
+The current frontend does not yet implement these components.
+
+---
+
+## 7. Data and External Dependencies
+
+The current application has no database, external service, or product-specific
+integration. A bead catalog, design persistence, and a sharing mechanism will
+be selected when those capabilities are implemented. PDF/image generation and
+email services are not part of the current scope.
+
+---
+
+## 8. Delivery Roadmap
+
+- [x] **Foundation:** Establish the Astro frontend, Rust/Axum backend, and root development commands.
+- [ ] **Design experience:** Implement strand and bead configuration with a live preview.
+- [ ] **Design summary:** Produce an artisan-readable specification.
+- [ ] **Persistence and sharing:** Select and implement storage and a way to share saved designs.
+- [ ] **Artisan workflow:** Define and implement how artisans access customer specifications.
+- [ ] **Production readiness:** Define measurable performance, security, accessibility, and deployment requirements; validate the application against them.
