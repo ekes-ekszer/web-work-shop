@@ -33,23 +33,39 @@ duplicate an existing prefix.
 
 ## Issue branches
 
-Assigning an issue creates a remote branch using the
-`<type>/<area>/<issue#>-<slug>` schema. Issues must have one `type: <value>`
-label and one `area: <value>` label, such as `type: feat` and `area: be`.
-Exactly one of each label is required, and values must be listed in
-[`.github/taxonomy.json`](./.github/taxonomy.json). The branch is created from
-the repository's default branch. If the branch already exists, it is reused and
-the issue receives a link to it. Missing or unsupported labels fail clearly
-instead of creating a malformed branch.
+Create a branch interactively with a concise, human-chosen description:
+
+```sh
+just branch
+```
+
+The command asks for an issue number, retrieves its `type: <value>` and
+`area: <value>` labels through the GitHub CLI, and asks for a short
+description. It then creates a branch using the
+`type/area/issue-description` convention from the current `HEAD`. For example,
+issue `13` with `type: feat` and `area: be`, followed by `jewelry-model`,
+creates `feat/be/13-jewelry-model`. Labels are validated against
+[`.github/taxonomy.json`](./.github/taxonomy.json), and Git validates the final
+branch name. Run `gh auth login` first if the GitHub CLI is not authenticated.
+
+When the work is ready, create and configure its pull request with:
+
+```sh
+just pr
+```
+
+This pushes the current branch with upstream tracking, creates a PR title such
+as `feat(3d): ring refraction`, applies the matching `type:` and `area:`
+labels, and adds `Closes #13` to the PR body. The command expects the current
+branch to follow the `type/area/issue-description` convention.
 
 Pull request titles are checked against Conventional Commits by the
 `Semantic PR title` workflow. Titles must use one of the supported types and
 include a project scope, for example `feat(be): add jewelry model`. The
 `Semantic PR title` job is configured as a required status check on `main`.
 
-The workflows need Actions write permission for branch creation and issue
-comments. Run `just check-automation` to validate the branch schema, taxonomy,
-and title-slug behavior locally.
+The supported commit and pull request types and scopes are listed in
+[`.github/taxonomy.json`](./.github/taxonomy.json).
 
 ## Run in development
 
