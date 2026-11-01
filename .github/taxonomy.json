@@ -1,0 +1,19 @@
+{
+  "types": [
+    "feat",
+    "fix",
+    "chore",
+    "docs",
+    "refactor",
+    "spike",
+    "perf",
+    "test"
+  ],
+  "scopes": [
+    "be",
+    "fe",
+    "3d",
+    "asset",
+    "devops"
+  ]
+}
