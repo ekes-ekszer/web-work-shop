@@ -7,6 +7,12 @@ install:
 setup-hooks:
     install -m 755 .githooks/prepare-commit-msg .git/hooks/prepare-commit-msg
 
+branch:
+    .github/scripts/create-branch.sh
+
+pr:
+    .github/scripts/create-pr.sh
+
 frontend:
     npm --prefix apps/frontend run dev
 
@@ -23,9 +29,6 @@ build:
 check:
     cargo clippy --manifest-path apps/backend/Cargo.toml -- -D warnings
     npm --prefix apps/frontend run check
-
-check-automation:
-    node .github/scripts/test-automation.mjs
 
 fmt:
     cargo fmt --manifest-path apps/backend/Cargo.toml

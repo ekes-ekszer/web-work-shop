@@ -10,7 +10,7 @@ fi
 
 branch_name="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
 
-if [[ "$branch_name" =~ ^([[:alnum:]_-]+)/([[:alnum:]_-]+)/[0-9]+- ]]; then
+if [[ "$branch_name" =~ ^([[:alnum:]_-]+)/([[:alnum:]_-]+)/[1-9][0-9]*-[^/]+$ ]]; then
     prefix="${BASH_REMATCH[1]}(${BASH_REMATCH[2]}): "
     first_line="$(sed -n '1p' "$commit_message_file")"
 
