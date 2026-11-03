@@ -6,6 +6,8 @@ An Astro frontend with a Rust/Axum backend.
 
 - [Node.js](https://nodejs.org/) 22.12 or newer
 - npm
+- [GitHub CLI](https://cli.github.com/) for issue branch and pull request
+  automation
 - [Rust](https://www.rust-lang.org/tools/install) and Cargo
 - [just](https://github.com/casey/just#installation)
 
@@ -18,6 +20,7 @@ just install
 ```
 
 This installs the frontend dependencies and downloads the Rust dependencies.
+The repository automation scripts use Node.js and do not require Bash or `jq`.
 
 ## Git hooks
 
