@@ -7,13 +7,13 @@ install:
     cargo fetch --manifest-path apps/backend/Cargo.toml
 
 setup-hooks:
-    install -m 755 .githooks/prepare-commit-msg .git/hooks/prepare-commit-msg
+    node .githooks/install.mjs
 
 branch:
-    .github/scripts/create-branch.sh
+    node .github/scripts/create-branch.mjs
 
 pr:
-    .github/scripts/create-pr.sh
+    node .github/scripts/create-pr.mjs
 
 frontend:
     npm --prefix apps/frontend run dev
