@@ -9,6 +9,8 @@ An Astro frontend with a Rust/Axum backend.
 - [GitHub CLI](https://cli.github.com/) for issue branch and pull request
   automation
 - [Rust](https://www.rust-lang.org/tools/install) and Cargo
+- [`cargo-watch`](https://github.com/watchexec/cargo-watch) for development
+  hot reloading
 - [just](https://github.com/casey/just#installation)
 
 ## Install
@@ -78,6 +80,10 @@ Start both services with one command:
 just dev
 ```
 
+`just dev` watches backend Rust changes with `cargo-watch`. After each change,
+it regenerates the TypeScript bindings with `cargo test`, restarts the backend,
+and Astro hot reloads when the generated files change.
+
 The services are available at:
 
 - Frontend: http://localhost:4321
@@ -90,6 +96,14 @@ To run only one service:
 ```sh
 just frontend
 just backend
+```
+
+Frontend TypeScript types generated from Rust models are written to
+[`apps/frontend/src/types`](./apps/frontend/src/types). Regenerate them after
+changing an exported Rust model with:
+
+```sh
+just generate-types
 ```
 
 ## Build and check
