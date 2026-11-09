@@ -22,11 +22,17 @@ backend:
     cargo run --manifest-path apps/backend/Cargo.toml
 
 dev:
-    (npm --prefix apps/frontend run dev) & (cargo run --manifest-path apps/backend/Cargo.toml) & wait
+    (npm --prefix apps/frontend run dev) & (cargo watch --workdir apps/backend --watch src --watch Cargo.toml --watch Cargo.lock --exec test --exec run) & wait
+
+alias start := dev
+alias run := dev
 
 build:
     npm --prefix apps/frontend run build
     cargo build --manifest-path apps/backend/Cargo.toml
+
+generate-types:
+    cargo test --manifest-path apps/backend/Cargo.toml
 
 check:
     cargo clippy --manifest-path apps/backend/Cargo.toml -- -D warnings

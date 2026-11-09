@@ -16,15 +16,22 @@ Inside of your Astro project, you'll see the following folders and files:
 │   └── favicon.svg
 ├── src
 │   ├── assets
-│   │   └── astro.svg
+│   │   └── ekes/
 │   ├── components
 │   │   └── Welcome.astro
+│   ├── lib
+│   │   └── media.ts
 │   ├── layouts
 │   │   └── Layout.astro
 │   └── pages
 │       └── index.astro
 └── package.json
 ```
+
+Production images and icons live in `src/assets/` so Astro can bundle and
+fingerprint them. Pages should import named media from `src/lib/media.ts`
+instead of referencing asset paths directly. This keeps local files replaceable
+with a CDN or object-storage adapter later.
 
 To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
 

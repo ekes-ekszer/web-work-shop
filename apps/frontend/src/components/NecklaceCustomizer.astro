@@ -1,0 +1,616 @@
+---
+import type { Necklace } from '../types/Necklace';
+import { media } from '../lib/media';
+
+const initialNecklace: Necklace = {
+  name: 'Hungarian folk necklace',
+  rows: [
+    {
+      pattern: 'Repeating red and white motif',
+      pearls: [
+        { size_mm: 8, color: '#b42318', pattern: 'Red accent' },
+        { size_mm: 6, color: '#f8fafc', pattern: 'White accent' },
+      ],
+    },
+  ],
+};
+---
+
+<section class="customizer" aria-labelledby="customizer-title">
+  <nav class="navigation" aria-label="Main navigation">
+    <div class="nav-links">
+      <a href="/#collection">Shop necklaces</a>
+      <a class="active" href="/create">Create your own</a>
+      <a href="/">Our story</a>
+    </div>
+    <a class="brand" href="/">Ékes Ékszer</a>
+    <div class="nav-links utility">
+      <a href="/#newsletter">Gifts &amp; little gestures</a>
+      <img src={media.navigation.search} alt="" />
+      <span class="bag"><img src={media.navigation.bag} alt="" />(0)</span>
+    </div>
+  </nav>
+
+  <div class="heading">
+    <p class="eyebrow">Personal by design</p>
+    <h1 id="customizer-title">A little piece<br />of you.</h1>
+    <p class="intro">
+      A name. A memory. A feeling you keep close. Create a necklace that tells
+      your story, in your own beautiful way.
+    </p>
+  </div>
+
+  <div class="workspace">
+    <form id="necklace-form" class="menu"></form>
+    <aside class="preview" aria-labelledby="preview-title">
+      <p class="eyebrow">Preview</p>
+      <h2 id="preview-title"></h2>
+      <div id="necklace-preview" class="necklace-preview"></div>
+      <div class="share-panel">
+        <h3>Share this design</h3>
+        <p id="share-code" class="share-code"></p>
+        <div class="share-actions">
+          <button type="button" data-action="copy-link">Copy share link</button>
+          <button type="button" data-action="copy-code">Copy code</button>
+        </div>
+        <p id="share-status" class="share-status" role="status"></p>
+      </div>
+      <pre id="necklace-data" class="data-preview"></pre>
+    </aside>
+  </div>
+</section>
+
+<script define:vars={{ initialNecklace }}>
+  const initialize = () => {
+    const decodeDesign = (encoded) => {
+      try {
+        const normalized = encoded.replace(/-/g, '+').replace(/_/g, '/');
+        const binary = atob(normalized);
+        const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+        const design = JSON.parse(new TextDecoder().decode(bytes));
+        if (
+          typeof design.name !== 'string' ||
+          !Array.isArray(design.rows) ||
+          design.rows.some(
+            (row) =>
+              !row ||
+              typeof row !== 'object' ||
+              !Array.isArray(row.pearls),
+          )
+        ) {
+          return null;
+        }
+        return design;
+      } catch {
+        return null;
+      }
+    };
+
+    const encodedDesign = new URLSearchParams(location.search).get('design');
+    const state = encodedDesign
+      ? decodeDesign(encodedDesign) ?? structuredClone(initialNecklace)
+      : structuredClone(initialNecklace);
+    const form = document.querySelector('#necklace-form');
+    const previewTitle = document.querySelector('#preview-title');
+    const preview = document.querySelector('#necklace-preview');
+    const dataPreview = document.querySelector('#necklace-data');
+    const shareCode = document.querySelector('#share-code');
+    const shareStatus = document.querySelector('#share-status');
+
+    if (!form || !previewTitle || !preview || !dataPreview || !shareCode || !shareStatus) {
+      setTimeout(initialize, 0);
+      return;
+    }
+
+  const escapeHtml = (value) =>
+    String(value)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+
+  const encodeDesign = () => {
+    const bytes = new TextEncoder().encode(JSON.stringify(state));
+    let binary = '';
+    bytes.forEach((byte) => {
+      binary += String.fromCharCode(byte);
+    });
+    return btoa(binary)
+      .replaceAll('+', '-')
+      .replaceAll('/', '_')
+      .replace(/=+$/, '');
+  };
+
+  const shareUrl = () => {
+    const url = new URL(location.href);
+    url.search = '';
+    url.searchParams.set('design', encodeDesign());
+    return url.toString();
+  };
+
+  const field = (label, value, path, type = 'text') => `
+    <label class="field">
+      <span>${escapeHtml(label)}</span>
+      <input type="${type}" value="${escapeHtml(value)}" data-path="${escapeHtml(path)}" ${type === 'number' ? 'min="1" step="0.5"' : ''} />
+    </label>
+  `;
+
+  const render = () => {
+    form.innerHTML = `
+      ${field('Necklace name', state.name, 'name')}
+      <div class="section-heading">
+        <h2>Rows</h2>
+        <button type="button" data-action="add-row">Add row</button>
+      </div>
+      ${state.rows
+        .map(
+          (row, rowIndex) => `
+            <fieldset class="row">
+              <legend>Row ${rowIndex + 1}</legend>
+              ${field('Row pattern', row.pattern ?? '', `rows.${rowIndex}.pattern`)}
+              <div class="section-heading">
+                <h3>Pearls</h3>
+                <button type="button" data-action="add-pearl" data-row="${rowIndex}">Add pearl</button>
+              </div>
+              ${row.pearls
+                .map(
+                  (pearl, pearlIndex) => `
+                    <div class="pearl">
+                      <strong>Pearl ${pearlIndex + 1}</strong>
+                      ${field('Size (mm)', pearl.size_mm, `rows.${rowIndex}.pearls.${pearlIndex}.size_mm`, 'number')}
+                      ${field('Color', pearl.color, `rows.${rowIndex}.pearls.${pearlIndex}.color`, 'color')}
+                      ${field('Pattern', pearl.pattern ?? '', `rows.${rowIndex}.pearls.${pearlIndex}.pattern`)}
+                    </div>
+                  `,
+                )
+                .join('')}
+            </fieldset>
+          `,
+        )
+        .join('')}
+    `;
+
+    previewTitle.textContent = state.name;
+    preview.innerHTML = state.rows
+      .map(
+        (row) => `
+          <div class="preview-row" title="${escapeHtml(row.pattern ?? '')}">
+            <span class="strand"></span>
+            ${row.pearls
+              .map(
+                (pearl) =>
+                  `<span class="preview-pearl" title="${escapeHtml(pearl.pattern ?? '')}" style="--pearl-color: ${escapeHtml(pearl.color)}; --pearl-size: ${Math.max(14, Math.min(42, pearl.size_mm * 3))}px"></span>`,
+              )
+              .join('')}
+          </div>
+        `,
+      )
+      .join('');
+    const code = encodeDesign();
+    shareCode.textContent = code;
+    history.replaceState(null, '', shareUrl());
+    dataPreview.textContent = JSON.stringify(state, null, 2);
+  };
+
+  const setValue = (path, value) => {
+    const parts = path.split('.');
+    let target = state;
+    parts.slice(0, -1).forEach((part) => {
+      target = target[part];
+    });
+    const key = parts.at(-1);
+    if (key) target[key] = key === 'size_mm' ? Number(value) : value || null;
+  };
+
+  form.addEventListener('input', (event) => {
+    const input = event.target;
+    if (input instanceof HTMLInputElement && input.dataset.path) {
+      setValue(input.dataset.path, input.value);
+      render();
+    }
+  });
+
+  form.addEventListener('click', (event) => {
+    const button =
+      event.target instanceof HTMLElement ? event.target.closest('button') : null;
+    if (!button) return;
+
+    if (button.dataset.action === 'copy-link' || button.dataset.action === 'copy-code') {
+      const value = button.dataset.action === 'copy-link' ? shareUrl() : encodeDesign();
+      navigator.clipboard
+        ?.writeText(value)
+        .then(() => {
+          shareStatus.textContent =
+            button.dataset.action === 'copy-link'
+              ? 'Share link copied.'
+              : 'Design code copied.';
+        })
+        ?.catch(() => {
+          shareStatus.textContent = 'Copy failed. Select the code below and copy it manually.';
+        });
+      if (!navigator.clipboard) {
+        shareStatus.textContent = 'Copy is unavailable. Select the code below and copy it manually.';
+      }
+      return;
+    }
+
+    if (button.dataset.action === 'add-row') {
+      state.rows.push({ pattern: null, pearls: [] });
+    } else if (button.dataset.action === 'add-pearl' && button.dataset.row) {
+      state.rows[Number(button.dataset.row)].pearls.push({
+        size_mm: 6,
+        color: '#b42318',
+        pattern: null,
+      });
+    }
+    render();
+  });
+
+    render();
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initialize, { once: true });
+  } else {
+    initialize();
+  }
+</script>
+
+<style>
+  :global(*) {
+    box-sizing: border-box;
+  }
+
+  .customizer {
+    width: 100%;
+    margin: 0 auto;
+    color: #332d27;
+    background: #f8f5ef;
+    font-family: Inter, Arial, sans-serif;
+  }
+
+  .navigation {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    min-height: 94px;
+    padding: 0 clamp(24px, 5vw, 72px);
+    border-bottom: 1px solid #dcd3c6;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    font-size: 12px;
+  }
+
+  .nav-links a {
+    color: #332d27;
+    text-decoration: none;
+  }
+
+  .nav-links a.active {
+    color: #886c42;
+  }
+
+  .utility {
+    justify-content: flex-end;
+    gap: 26px;
+  }
+
+  .brand {
+    color: #332d27;
+    font-family: Georgia, serif;
+    font-size: clamp(2rem, 3vw, 2.7rem);
+    text-decoration: none;
+  }
+
+  .utility > img,
+  .bag img {
+    width: 19px;
+    height: 19px;
+  }
+
+  .bag {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .heading {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 82px 24px 48px;
+    text-align: center;
+  }
+
+  .eyebrow {
+    margin: 0 0 8px;
+    color: #886c42;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  h1,
+  h2,
+  h3,
+  p {
+    margin-top: 0;
+  }
+
+  h1 {
+    margin-bottom: 12px;
+    font-family: Georgia, serif;
+    font-size: clamp(3.5rem, 7vw, 5.2rem);
+    font-weight: 500;
+    line-height: 1.08;
+  }
+
+  .intro {
+    max-width: 520px;
+    margin: 20px auto 0;
+    color: #766d62;
+    font-size: 15px;
+    line-height: 1.8;
+  }
+
+  .workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 1fr);
+    gap: 0;
+    width: min(1296px, calc(100% - 48px));
+    margin: 0 auto 88px;
+  }
+
+  .menu,
+  .preview {
+    padding: 40px;
+    border: 1px solid #dcd3c6;
+    border-radius: 0;
+    background: #f8f5ef;
+    box-shadow: none;
+  }
+
+  .menu {
+    display: grid;
+    gap: 16px;
+  }
+
+  .field {
+    display: grid;
+    gap: 6px;
+    color: #766d62;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  input {
+    width: 100%;
+    min-height: 42px;
+    padding: 8px 10px;
+    border: 0;
+    border-bottom: 1px solid #dcd3c6;
+    border-radius: 0;
+    background: transparent;
+    color: #332d27;
+    font: inherit;
+  }
+
+  input[type='color'] {
+    padding: 4px;
+  }
+
+  .section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  h2,
+  h3 {
+    margin-bottom: 0;
+    font-family: Georgia, serif;
+    font-weight: 500;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.1rem;
+  }
+
+  button {
+    border: 1px solid #886c42;
+    border-radius: 0;
+    padding: 12px 18px;
+    background: #886c42;
+    color: #fffdfa;
+    cursor: pointer;
+    font: inherit;
+    font-size: 11px;
+    letter-spacing: 0.03em;
+  }
+
+  button:hover {
+    background: #6f5634;
+  }
+
+  .row {
+    display: grid;
+    gap: 14px;
+    margin: 0;
+    padding: 20px 0 0;
+    border: 0;
+    border-top: 1px solid #dcd3c6;
+    border-radius: 0;
+  }
+
+  legend {
+    padding: 0 10px 0 0;
+    font-family: Georgia, serif;
+    font-size: 1.25rem;
+  }
+
+  .pearl {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid #dcd3c6;
+    border-radius: 0;
+    background: #eee8de;
+  }
+
+  .pearl strong {
+    grid-column: 1 / -1;
+    font-family: Georgia, serif;
+    font-weight: 500;
+  }
+
+  .preview {
+    align-self: start;
+    position: sticky;
+    top: 24px;
+    min-height: 620px;
+    background: #eee8de;
+  }
+
+  .preview h2 {
+    margin-bottom: 28px;
+  }
+
+  .necklace-preview {
+    display: grid;
+    gap: 22px;
+    min-height: 250px;
+    place-content: center;
+    padding: 28px 12px;
+    border-radius: 0;
+    background: #f8f5ef;
+  }
+
+  .preview-row {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    min-width: 180px;
+    padding: 8px 0;
+  }
+
+  .strand {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    left: 0;
+    height: 4px;
+    transform: translateY(-50%);
+    border-radius: 999px;
+    background: #8d5b3f;
+    box-shadow: 0 1px 2px rgba(47, 36, 31, 0.18);
+  }
+
+  .preview-pearl {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: var(--pearl-size);
+    height: var(--pearl-size);
+    min-width: 10px;
+    min-height: 10px;
+    border: 2px solid rgba(47, 36, 31, 0.18);
+    border-radius: 50%;
+    background: var(--pearl-color);
+    box-shadow: 0 3px 6px rgba(47, 36, 31, 0.22);
+  }
+
+  .share-panel {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #dcd3c6;
+  }
+
+  .share-panel h3 {
+    margin-bottom: 8px;
+  }
+
+  .share-code {
+    margin-bottom: 12px;
+    overflow: hidden;
+    color: #75655d;
+    font-family: ui-monospace, monospace;
+    font-size: 0.7rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .share-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .share-status {
+    min-height: 1.2em;
+    margin: 10px 0 0;
+    color: #886c42;
+    font-size: 0.8rem;
+  }
+
+  .data-preview {
+    max-height: 220px;
+    margin: 24px 0 0;
+    overflow: auto;
+    color: #75655d;
+    font-size: 0.7rem;
+    white-space: pre-wrap;
+  }
+
+  @media (max-width: 760px) {
+    .customizer {
+      padding: 32px 0;
+    }
+
+    .workspace {
+      grid-template-columns: 1fr;
+      width: calc(100% - 32px);
+    }
+
+    .navigation {
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      padding: 20px 16px;
+    }
+
+    .nav-links:first-child {
+      display: none;
+    }
+
+    .utility {
+      gap: 12px;
+    }
+
+    .utility a,
+    .utility > img {
+      display: none;
+    }
+
+    .menu,
+    .preview {
+      padding: 24px;
+    }
+
+    .preview {
+      position: static;
+    }
+  }
+</style>
