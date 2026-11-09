@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct PearlId(pub String);
@@ -42,13 +43,17 @@ pub struct Necklace {
     pub end_length_mm: Millimeters,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// A single row in a necklace design.
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../frontend/src/types/")]
 pub struct NecklaceRow {
     pub pattern: Vec<PearlId>,
     pub full_length_mm: Millimeters,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// A pearl and the visual properties used when rendering or building it.
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../frontend/src/types/")]
 pub struct Pearl {
     pub id: PearlId,
     pub color: Color,
