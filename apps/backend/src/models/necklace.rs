@@ -9,7 +9,6 @@ pub struct RibbonId(pub String);
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct EndBandId(pub String);
 
-
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
 pub struct Millimeters(pub f32);
 
@@ -67,6 +66,5 @@ pub struct Ribbon {
 pub struct EndBand {
     pub id: EndBandId,
     pub color: Color,
-    pub width_mm: Millimeters, 
-
+    pub width_mm: Millimeters,
 }
