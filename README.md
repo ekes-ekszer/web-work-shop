@@ -2,6 +2,11 @@
 
 An Astro frontend with Rust data models and generated TypeScript bindings.
 
+## Documentation
+
+- [Necklace customizer workflow](./docs/CUSTOMIZER_WORKFLOW.md)
+- [Software requirements specification](./docs/SRS.md)
+
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) 22.12 or newer

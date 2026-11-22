@@ -91,6 +91,7 @@ implementation.
 ## 6. User Interface References
 
 * **Figma Board:** [Ékes Ékszer design](https://www.figma.com/design/uZC856mBdonOGqfALBivDy/Untitled?node-id=0-1&p=f&t=L9xWF1Tnb3o1mp65-0)
+* **Customizer workflow:** [Necklace customizer user workflow](./CUSTOMIZER_WORKFLOW.md)
 * **Planned primary components:**
   * Necklace preview.
   * Strand and bead selection controls.
