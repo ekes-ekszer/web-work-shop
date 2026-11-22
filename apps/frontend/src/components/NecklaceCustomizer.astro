@@ -43,9 +43,8 @@ const initialNecklace: Necklace = {
   <div class="workspace">
     <form id="necklace-form" class="menu"></form>
     <aside class="preview" aria-labelledby="preview-title">
-      <p class="eyebrow">Preview</p>
-      <h2 id="preview-title"></h2>
-      <div id="necklace-preview" class="necklace-preview"></div>
+      <p class="eyebrow">Share</p>
+      <h2 id="preview-title">Your design code</h2>
       <div class="share-panel">
         <h3>Share this design</h3>
         <p id="share-code" class="share-code"></p>
@@ -68,18 +67,66 @@ const initialNecklace: Necklace = {
         const binary = atob(normalized);
         const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
         const design = JSON.parse(new TextDecoder().decode(bytes));
+        const validRibbons = new Set([
+          'red-ribbon',
+          'burgundy-ribbon',
+          'cream-ribbon',
+          'blue-ribbon',
+          'green-ribbon',
+          'rose-ribbon',
+          'black-ribbon',
+          'purple-ribbon',
+        ]);
+        const validEndBands = new Set([
+          'gold-end-band',
+          'silver-end-band',
+          'bronze-end-band',
+          'rose-gold-band',
+          'red-band',
+          'blue-band',
+          'green-band',
+          'black-band',
+        ]);
+        const validPearls = new Set([
+          'red',
+          'white',
+          'gold',
+          'turquoise',
+          'pink',
+          'green',
+          'gold-pearl',
+        ]);
+        const validStrandPearls = new Set([
+          'red',
+          'white',
+          'gold',
+          'turquoise',
+          'pink',
+          'green',
+        ]);
+        const isPositiveMeasurement = (value) =>
+          typeof value === 'number' && Number.isFinite(value) && value > 0;
         if (
           !Array.isArray(design.rows) ||
+          design.rows.length < 1 ||
+          design.rows.length > 12 ||
           typeof design.ribbon !== 'string' ||
           typeof design.end_band !== 'string' ||
           typeof design.end_pearl !== 'string' ||
-          typeof design.end_length_mm !== 'number' ||
+          !validRibbons.has(design.ribbon) ||
+          !validEndBands.has(design.end_band) ||
+          !validPearls.has(design.end_pearl) ||
+          !isPositiveMeasurement(design.end_length_mm) ||
           design.rows.some(
             (row) =>
               !row ||
               typeof row !== 'object' ||
-                !Array.isArray(row.pattern) ||
-                typeof row.full_length_mm !== 'number',
+              !isPositiveMeasurement(row.full_length_mm) ||
+              !Array.isArray(row.pattern) ||
+              row.pattern.length > 100 ||
+              row.pattern.some(
+                (pearl) => typeof pearl !== 'string' || !validStrandPearls.has(pearl),
+              ),
           )
         ) {
           return null;
@@ -95,13 +142,11 @@ const initialNecklace: Necklace = {
       ? decodeDesign(encodedDesign) ?? structuredClone(initialNecklace)
       : structuredClone(initialNecklace);
     const form = document.querySelector('#necklace-form');
-    const previewTitle = document.querySelector('#preview-title');
-    const preview = document.querySelector('#necklace-preview');
     const dataPreview = document.querySelector('#necklace-data');
     const shareCode = document.querySelector('#share-code');
     const shareStatus = document.querySelector('#share-status');
 
-    if (!form || !previewTitle || !preview || !dataPreview || !shareCode || !shareStatus) {
+    if (!form || !dataPreview || !shareCode || !shareStatus) {
       setTimeout(initialize, 0);
       return;
     }
@@ -133,52 +178,283 @@ const initialNecklace: Necklace = {
     return url.toString();
   };
 
-  const field = (label, value, path, type = 'text') => `
-    <label class="field">
-      <span>${escapeHtml(label)}</span>
-      <input type="${type}" value="${escapeHtml(value)}" data-path="${escapeHtml(path)}" ${type === 'number' ? 'min="1" step="0.5"' : ''} />
-    </label>
+  const ribbonOptions = [
+    { id: 'red-ribbon', label: 'Heritage red', color: '#9e382f', family: 'red' },
+    { id: 'burgundy-ribbon', label: 'Deep burgundy', color: '#672a35', family: 'red' },
+    { id: 'cream-ribbon', label: 'Natural cream', color: '#d9c7a6', family: 'gold' },
+    { id: 'blue-ribbon', label: 'Folk blue', color: '#4d6680', family: 'blue' },
+    { id: 'green-ribbon', label: 'Forest green', color: '#4f6758', family: 'green' },
+    { id: 'rose-ribbon', label: 'Muted rose', color: '#a87378', family: 'pink' },
+    { id: 'black-ribbon', label: 'Midnight black', color: '#343331', family: 'neutral' },
+    { id: 'purple-ribbon', label: 'Heritage purple', color: '#69566f', family: 'purple' },
+  ];
+  const endBandOptions = [
+    { id: 'gold-end-band', label: 'Antique gold', color: '#c9a45d', family: 'gold' },
+    { id: 'silver-end-band', label: 'Polished silver', color: '#aeb1ae', family: 'neutral' },
+    { id: 'bronze-end-band', label: 'Warm bronze', color: '#a66f46', family: 'brown' },
+    { id: 'rose-gold-band', label: 'Rose gold', color: '#b98478', family: 'pink' },
+    { id: 'red-band', label: 'Garnet red', color: '#9e382f', family: 'red' },
+    { id: 'blue-band', label: 'Patina blue', color: '#4d6680', family: 'blue' },
+    { id: 'green-band', label: 'Patina green', color: '#5f7a69', family: 'green' },
+    { id: 'black-band', label: 'Darkened steel', color: '#343331', family: 'neutral' },
+  ];
+  const pearlOptions = [
+    { id: 'red', label: 'Red', color: '#b84a3f' },
+    { id: 'white', label: 'Ivory', color: '#f1ead8' },
+    { id: 'gold', label: 'Gold', color: '#c9a45d' },
+    { id: 'turquoise', label: 'Turquoise', color: '#63a9a2' },
+    { id: 'pink', label: 'Rose', color: '#d39496' },
+    { id: 'green', label: 'Green', color: '#73866a' },
+  ];
+  let selectedPearl = pearlOptions[0].id;
+  let ribbonFilter = 'all';
+  let endBandFilter = 'all';
+  let editingPearl = null;
+  let pearlPopoverPosition = { x: 0, y: 0 };
+
+  const closePearlPopover = (restoreFocus = true) => {
+    const previousPearl = editingPearl;
+    editingPearl = null;
+    render();
+    if (restoreFocus && previousPearl) {
+      requestAnimationFrame(() => {
+        form
+          .querySelector(
+            `[data-action="replace-pearl"][data-row="${previousPearl.row}"][data-pearl="${previousPearl.pearl}"]`,
+          )
+          ?.focus();
+      });
+    }
+  };
+
+  const pearlColor = (id) =>
+    pearlOptions.find((option) => option.id === id)?.color ?? '#a99d8b';
+
+  const catalogFilters = [
+    { id: 'all', label: 'All', color: null },
+    { id: 'red', label: 'Red', color: '#9e382f' },
+    { id: 'pink', label: 'Pink', color: '#b98478' },
+    { id: 'gold', label: 'Gold', color: '#c9a45d' },
+    { id: 'green', label: 'Green', color: '#5f7a69' },
+    { id: 'blue', label: 'Blue', color: '#4d6680' },
+    { id: 'purple', label: 'Purple', color: '#69566f' },
+    { id: 'neutral', label: 'Neutral', color: '#343331' },
+  ];
+
+  const catalogGallery = (label, path, options, selectedId, activeFilter) => {
+    const visibleOptions =
+      activeFilter === 'all'
+        ? options
+        : options.filter((option) => option.family === activeFilter);
+    return `
+      <section class="catalog-section" aria-label="${escapeHtml(label)}">
+        <div class="catalog-heading">
+          <span class="field-label">${escapeHtml(label)}</span>
+          <span class="catalog-count">${visibleOptions.length} choices</span>
+        </div>
+        <div class="catalog-filter" aria-label="Filter ${escapeHtml(label)} by color">
+          ${catalogFilters
+            .map(
+              (filter) => `
+                <button type="button"
+                  class="filter-circle${filter.id === activeFilter ? ' is-selected' : ''}"
+                  data-action="filter-catalog" data-catalog="${escapeHtml(path)}" data-filter="${filter.id}"
+                  aria-label="Show ${escapeHtml(filter.label)} ${escapeHtml(label).toLowerCase()}"
+                  aria-pressed="${filter.id === activeFilter}">
+                  ${filter.color
+                    ? `<span style="--filter-color: ${filter.color}" aria-hidden="true"></span>`
+                    : '<span class="filter-all" aria-hidden="true">All</span>'}
+                </button>
+              `,
+            )
+            .join('')}
+        </div>
+        <div class="catalog-grid">
+          ${visibleOptions
+            .map(
+              (option) => `
+                <button type="button"
+                  class="catalog-card${option.id === selectedId ? ' is-selected' : ''}"
+                  data-action="select-catalog" data-path="${escapeHtml(path)}" data-value="${escapeHtml(option.id)}"
+                  aria-pressed="${option.id === selectedId}">
+                  <span class="catalog-swatch" style="--catalog-color: ${option.color}" aria-hidden="true"></span>
+                  <span>${escapeHtml(option.label)}</span>
+                </button>
+              `,
+            )
+            .join('')}
+        </div>
+      </section>
+    `;
+  };
+  const ribbonColor = (id) =>
+    ribbonOptions.find((option) => option.id === id)?.color ?? '#9e382f';
+
+  const numberField = (label, value, path) => `
+    <div class="field custom-number-field">
+      <span class="field-label">${escapeHtml(label)}</span>
+      <div class="number-stepper" data-stepper="${escapeHtml(path)}">
+        <button type="button" class="stepper-button" data-action="decrease-number"
+          data-path="${escapeHtml(path)}" aria-label="Decrease ${escapeHtml(label)}">
+          <span aria-hidden="true">−</span>
+        </button>
+        <div class="stepper-value" data-path="${escapeHtml(path)}" aria-label="${escapeHtml(label)}">
+          <strong>${escapeHtml(value)}</strong>
+          <small>mm</small>
+        </div>
+        <button type="button" class="stepper-button" data-action="increase-number"
+          data-path="${escapeHtml(path)}" aria-label="Increase ${escapeHtml(label)}">
+          <span aria-hidden="true">+</span>
+        </button>
+      </div>
+    </div>
   `;
 
   const render = () => {
     form.innerHTML = `
-      ${field('Ribbon ID', state.ribbon, 'ribbon')}
-      ${field('End band ID', state.end_band, 'end_band')}
-      ${field('End pearl ID', state.end_pearl, 'end_pearl')}
-      ${field('End length (mm)', state.end_length_mm, 'end_length_mm', 'number')}
-      <div class="section-heading">
-        <h2>Rows</h2>
-        <button type="button" data-action="add-row">Add row</button>
-      </div>
+      <section class="customizer-section">
+        <header class="section-heading">
+          <div><span class="section-number">01</span><h2>Ribbon</h2></div>
+        </header>
+        ${catalogGallery('Choose ribbon', 'ribbon', ribbonOptions, state.ribbon, ribbonFilter)}
+      </section>
+      <section class="customizer-section">
+        <header class="section-heading">
+          <div><span class="section-number">02</span><h2>End band</h2></div>
+        </header>
+        ${catalogGallery('Choose end band', 'end_band', endBandOptions, state.end_band, endBandFilter)}
+      </section>
+      <section class="customizer-section">
+        <header class="section-heading">
+          <div><span class="section-number">03</span><h2>End pearl</h2></div>
+        </header>
+        ${catalogGallery(
+          'Choose end pearl',
+          'end_pearl',
+          [...pearlOptions, { id: 'gold-pearl', label: 'Gold pearl', color: '#c9a45d', family: 'gold' }],
+          state.end_pearl,
+          'all',
+        )}
+      </section>
+      <section class="customizer-section">
+        <header class="section-heading">
+          <div><span class="section-number">04</span><h2>Pearls</h2></div>
+        </header>
+        <div class="pearl-tool">
+          <div class="top-pearl-palette" aria-label="Select the default pearl">
+            ${pearlOptions
+              .map(
+                (pearl) => `
+                  <button type="button"
+                    class="top-pearl-button${pearl.id === selectedPearl ? ' is-selected' : ''}"
+                    data-action="select-pearl" data-value="${pearl.id}"
+                    aria-pressed="${pearl.id === selectedPearl}"
+                    aria-label="Set default pearl to ${escapeHtml(pearl.label)}">
+                    <span class="top-pearl-swatch" style="--pearl-color: ${pearl.color}" aria-hidden="true"></span>
+                  </button>
+                `,
+              )
+              .join('')}
+          </div>
+          <div class="selected-pearl-name" aria-live="polite">
+            Default: <strong>${escapeHtml(pearlOptions.find((pearl) => pearl.id === selectedPearl)?.label ?? 'Red')}</strong>
+          </div>
+        </div>
+      </section>
+      <section class="customizer-section strands-section">
+        <header class="section-heading">
+          <div><span class="section-number">05</span><h2>Strands</h2></div>
+          <button type="button" class="secondary-button" data-action="add-row">+ Add strand</button>
+        </header>
+        <div class="measurement-strip">
+          ${numberField('End length', state.end_length_mm, 'end_length_mm')}
+        </div>
       ${state.rows
         .map(
           (row, rowIndex) => `
             <fieldset class="row">
-              <legend>Row ${rowIndex + 1}</legend>
-              ${field('Pearl IDs', row.pattern.join(', '), `rows.${rowIndex}.pattern`)}
-              ${field('Full length (mm)', row.full_length_mm, `rows.${rowIndex}.full_length_mm`, 'number')}
+              <legend>Strand ${rowIndex + 1}</legend>
+              ${numberField('Full length (mm)', row.full_length_mm, `rows.${rowIndex}.full_length_mm`)}
+              <div class="pearl-editor">
+                <div class="sequence-heading">
+                  <span class="field-label">Pearl sequence</span>
+                  <span class="bead-count">${row.pattern.length} ${row.pattern.length === 1 ? 'bead' : 'beads'}</span>
+                </div>
+                <div class="pearl-sequence" aria-label="Selected pearls"
+                  style="--strand-color: ${ribbonColor(state.ribbon)}">
+                  ${row.pattern.length
+                    ? row.pattern
+                        .map(
+                          (pearlId, pearlIndex) => `
+                            <button type="button" class="sequence-pearl"
+                              style="--pearl-color: ${pearlColor(pearlId)}"
+                              title="Change ${escapeHtml(pearlOptions.find((pearl) => pearl.id === pearlId)?.label ?? pearlId)}"
+                              aria-label="Change pearl ${pearlIndex + 1}: ${escapeHtml(pearlId)}"
+                              aria-haspopup="menu"
+                              aria-expanded="${editingPearl?.row === rowIndex && editingPearl?.pearl === pearlIndex}"
+                              data-action="replace-pearl" data-row="${rowIndex}" data-pearl="${pearlIndex}">
+                            </button>
+                          `,
+                        )
+                        .join('')
+                    : '<span class="empty-sequence">Choose pearls below</span>'}
+                  <div class="row-pearl-picker">
+                    <button type="button" class="sequence-add"
+                      data-action="add-selected-pearl" data-row="${rowIndex}"
+                      aria-label="Add a pearl to strand ${rowIndex + 1}">
+                      +
+                    </button>
+                  </div>
+                </div>
+                <p class="hold-hint">Tap a bead to change its pearl color.</p>
+                <div class="row-actions">
+                  <button type="button" class="row-icon-button" data-action="clear-row" data-row="${rowIndex}"
+                    ${row.pattern.length ? '' : 'disabled'}
+                    aria-label="Clear strand ${rowIndex + 1} sequence" title="Clear sequence">
+                    <span aria-hidden="true">↺</span>
+                  </button>
+                  ${state.rows.length > 1
+                    ? `<button type="button" class="row-icon-button row-remove" data-action="remove-row" data-row="${rowIndex}"
+                        aria-label="Remove strand ${rowIndex + 1}" title="Remove strand">
+                        <span aria-hidden="true">×</span>
+                      </button>`
+                    : ''}
+                </div>
+              </div>
             </fieldset>
           `,
         )
         .join('')}
+      </section>
+      ${editingPearl
+        ? `<div class="pearl-popover" role="menu"
+            aria-label="Change pearl ${editingPearl.pearl + 1}"
+            style="--popover-x: ${pearlPopoverPosition.x}px; --popover-y: ${pearlPopoverPosition.y}px">
+            <div class="popover-heading">
+              <span>Pearl ${editingPearl.pearl + 1}</span>
+              <button type="button" class="popover-close" data-action="close-pearl-popover"
+                aria-label="Close pearl color menu">×</button>
+            </div>
+            <div class="popover-colors">
+              ${pearlOptions
+                .map(
+                  (pearl) => `
+                    <button type="button" role="menuitem"
+                      class="row-pearl-option${state.rows[editingPearl.row]?.pattern[editingPearl.pearl] === pearl.id ? ' is-selected' : ''}"
+                      data-action="replace-with-pearl" data-row="${editingPearl.row}"
+                      data-pearl="${editingPearl.pearl}" data-value="${pearl.id}"
+                      aria-pressed="${state.rows[editingPearl.row]?.pattern[editingPearl.pearl] === pearl.id}"
+                      aria-label="Change to ${escapeHtml(pearl.label)} pearl">
+                      <span class="row-pearl-swatch" style="--pearl-color: ${pearl.color}" aria-hidden="true"></span>
+                    </button>
+                  `,
+                )
+                .join('')}
+            </div>
+          </div>`
+        : ''}
     `;
 
-    previewTitle.textContent = 'Hungarian folk necklace';
-    preview.innerHTML = state.rows
-      .map(
-        (row) => `
-          <div class="preview-row" title="${escapeHtml(row.pattern.join(', '))}">
-            <span class="strand"></span>
-            ${row.pattern
-              .map(
-                (pearlId) =>
-                  `<span class="preview-pearl" title="${escapeHtml(pearlId)}"></span>`,
-              )
-              .join('')}
-          </div>
-        `,
-      )
-      .join('');
     const code = encodeDesign();
     shareCode.textContent = code;
     history.replaceState(null, '', shareUrl());
@@ -194,50 +470,166 @@ const initialNecklace: Necklace = {
     const key = parts.at(-1);
     if (key) {
       target[key] =
-        key === 'pattern'
-          ? value.split(',').map((item) => item.trim()).filter(Boolean)
-          : key === 'full_length_mm' || key === 'end_length_mm'
-            ? Number(value)
-            : value;
+        key === 'full_length_mm' || key === 'end_length_mm'
+          ? Number(value)
+          : value;
     }
   };
 
-  form.addEventListener('input', (event) => {
-    const input = event.target;
-    if (input instanceof HTMLInputElement && input.dataset.path) {
-      setValue(input.dataset.path, input.value);
-      render();
-    }
-  });
+  const getValue = (path) =>
+    path.split('.').reduce((target, part) => target?.[part], state);
 
   form.addEventListener('click', (event) => {
     const button =
       event.target instanceof HTMLElement ? event.target.closest('button') : null;
     if (!button) return;
 
-    if (button.dataset.action === 'copy-link' || button.dataset.action === 'copy-code') {
-      const value = button.dataset.action === 'copy-link' ? shareUrl() : encodeDesign();
-      navigator.clipboard
-        ?.writeText(value)
-        .then(() => {
-          shareStatus.textContent =
-            button.dataset.action === 'copy-link'
-              ? 'Share link copied.'
-              : 'Design code copied.';
-        })
-        ?.catch(() => {
-          shareStatus.textContent = 'Copy failed. Select the code below and copy it manually.';
-        });
-      if (!navigator.clipboard) {
-        shareStatus.textContent = 'Copy is unavailable. Select the code below and copy it manually.';
-      }
+    if (button.dataset.action === 'filter-catalog') {
+      if (button.dataset.catalog === 'ribbon') ribbonFilter = button.dataset.filter;
+      if (button.dataset.catalog === 'end_band') endBandFilter = button.dataset.filter;
+      render();
+      return;
+    }
+
+    if (button.dataset.action === 'select-catalog') {
+      setValue(button.dataset.path, button.dataset.value);
+      render();
+      return;
+    }
+
+    if (button.dataset.action === 'increase-number' || button.dataset.action === 'decrease-number') {
+      const path = button.dataset.path;
+      if (!path) return;
+      const current = Number(getValue(path));
+      if (!Number.isFinite(current)) return;
+      const next = Math.max(1, current + (button.dataset.action === 'increase-number' ? 0.5 : -0.5));
+      setValue(path, String(next));
+      render();
       return;
     }
 
     if (button.dataset.action === 'add-row') {
       state.rows.push({ pattern: [], full_length_mm: 40 });
+      render();
+      return;
     }
-    render();
+    if (button.dataset.action === 'select-pearl') {
+      selectedPearl = button.dataset.value;
+      render();
+      return;
+    }
+    if (button.dataset.action === 'add-selected-pearl') {
+      const rowIndex = Number(button.dataset.row);
+      state.rows[rowIndex]?.pattern.push(selectedPearl);
+      editingPearl = null;
+      render();
+      return;
+    }
+    if (button.dataset.action === 'replace-pearl') {
+      const rowIndex = Number(button.dataset.row);
+      const pearlIndex = Number(button.dataset.pearl);
+      const rect = button.getBoundingClientRect();
+      pearlPopoverPosition = {
+        x: Math.max(12, Math.min(window.innerWidth - 252, rect.left - 16)),
+        y: rect.bottom + 10,
+      };
+      editingPearl = { row: rowIndex, pearl: pearlIndex };
+      render();
+      requestAnimationFrame(() => {
+        const selectedOption =
+          form.querySelector('.pearl-popover [role="menuitem"][aria-pressed="true"]');
+        const firstOption =
+          selectedOption ?? form.querySelector('.pearl-popover [role="menuitem"]');
+        firstOption?.focus();
+      });
+      return;
+    }
+    if (button.dataset.action === 'replace-with-pearl') {
+      const rowIndex = Number(button.dataset.row);
+      const pearlIndex = Number(button.dataset.pearl);
+      if (state.rows[rowIndex]) {
+        state.rows[rowIndex].pattern[pearlIndex] = button.dataset.value;
+      }
+      closePearlPopover();
+      return;
+    }
+    if (button.dataset.action === 'close-pearl-popover') {
+      closePearlPopover();
+      return;
+    }
+    if (button.dataset.action === 'clear-row') {
+      const rowIndex = Number(button.dataset.row);
+      if (state.rows[rowIndex]) state.rows[rowIndex].pattern = [];
+      render();
+      return;
+    }
+    if (button.dataset.action === 'remove-row') {
+      const rowIndex = Number(button.dataset.row);
+      state.rows.splice(rowIndex, 1);
+      render();
+      return;
+    }
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!(event.target instanceof HTMLElement)) return;
+    if (
+      editingPearl &&
+      !event.target.closest('.pearl-popover') &&
+      !event.target.closest('[data-action="replace-pearl"]')
+    ) {
+      closePearlPopover();
+    }
+
+    const copyButton = event.target.closest('[data-action="copy-link"], [data-action="copy-code"]');
+    if (!(copyButton instanceof HTMLButtonElement)) return;
+    const value = copyButton.dataset.action === 'copy-link' ? shareUrl() : encodeDesign();
+    if (!navigator.clipboard) {
+      shareCode.classList.add('is-visible');
+      shareStatus.textContent = 'Copy is unavailable. Select the code below and copy it manually.';
+      return;
+    }
+    navigator.clipboard.writeText(value).then(
+      () => {
+        shareStatus.textContent =
+          copyButton.dataset.action === 'copy-link'
+            ? 'Share link copied.'
+            : 'Design code copied.';
+      },
+      () => {
+        shareCode.classList.add('is-visible');
+        shareStatus.textContent = 'Copy failed. Select the code below and copy it manually.';
+      },
+    );
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (editingPearl && event.target instanceof HTMLElement) {
+      const popover = event.target.closest('.pearl-popover');
+      const menuItem = event.target.closest('[role="menuitem"]');
+      if (popover && menuItem) {
+        const options = [...popover.querySelectorAll('[role="menuitem"]')];
+        const currentIndex = options.indexOf(menuItem);
+        let nextIndex = currentIndex;
+        if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+          nextIndex = (currentIndex + 1) % options.length;
+        } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+          nextIndex = (currentIndex - 1 + options.length) % options.length;
+        } else if (event.key === 'Home') {
+          nextIndex = 0;
+        } else if (event.key === 'End') {
+          nextIndex = options.length - 1;
+        }
+        if (nextIndex !== currentIndex) {
+          event.preventDefault();
+          options[nextIndex]?.focus();
+        }
+      }
+    }
+    if (event.key !== 'Escape') return;
+    if (editingPearl) {
+      closePearlPopover();
+    }
   });
 
     render();
@@ -250,8 +642,8 @@ const initialNecklace: Necklace = {
   }
 </script>
 
-<style>
-  :global(*) {
+<style is:global>
+  * {
     box-sizing: border-box;
   }
 
@@ -373,6 +765,41 @@ const initialNecklace: Necklace = {
     gap: 16px;
   }
 
+  .customizer-section {
+    display: grid;
+    gap: 14px;
+    padding: 20px;
+    border: 1px solid #dcd3c6;
+    background: #fffdfa;
+  }
+
+  .customizer-section .section-heading {
+    margin: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee8de;
+  }
+
+  .customizer-section .section-heading > div {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .section-number {
+    color: #9b9286;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+  }
+
+  .measurement-strip {
+    display: flex;
+    max-width: 220px;
+  }
+
+  .measurement-strip .field {
+    width: 220px;
+  }
+
   .field {
     display: grid;
     gap: 6px;
@@ -382,20 +809,212 @@ const initialNecklace: Necklace = {
     letter-spacing: 0.02em;
   }
 
-  input {
-    width: 100%;
-    min-height: 42px;
-    padding: 8px 10px;
-    border: 0;
-    border-bottom: 1px solid #dcd3c6;
-    border-radius: 0;
-    background: transparent;
-    color: #332d27;
-    font: inherit;
+  .field-label {
+    color: #766d62;
   }
 
-  input[type='color'] {
+  .catalog-section {
+    display: grid;
+    gap: 10px;
+  }
+
+  .catalog-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .catalog-count {
+    color: #9b9286;
+    font-size: 11px;
+  }
+
+  .catalog-filter {
+    display: flex;
+    gap: 7px;
+    overflow-x: auto;
+    padding: 2px 0 5px;
+  }
+
+  .filter-circle {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    place-items: center;
     padding: 4px;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    background: transparent;
+  }
+
+  .filter-circle > span:not(.filter-all) {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #fffdfa;
+    border-radius: 50%;
+    background: var(--filter-color);
+    box-shadow: 0 1px 4px rgba(51, 45, 39, 0.14);
+  }
+
+  .filter-circle.is-selected {
+    border-color: #886c42;
+  }
+
+  .filter-all {
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    border: 1px solid #dcd3c6;
+    border-radius: 50%;
+    background: #fffdfa;
+    color: #332d27;
+    font-size: 8px;
+  }
+
+  .catalog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+  }
+
+  .catalog-card {
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    align-items: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 7px;
+    border: 1px solid #dcd3c6;
+    border-radius: 8px;
+    background: #fffdfa;
+    color: #332d27;
+    text-align: left;
+  }
+
+  .catalog-card:hover,
+  .catalog-card.is-selected {
+    border-color: #886c42;
+    background: #f1ece2;
+  }
+
+  .catalog-swatch {
+    width: 32px;
+    height: 32px;
+    border: 2px solid #fffdfa;
+    border-radius: 50%;
+    background: var(--catalog-color);
+    box-shadow: 0 2px 5px rgba(51, 45, 39, 0.12);
+  }
+
+  .pearl-tool {
+    display: grid;
+    gap: 12px;
+    padding: 8px 0;
+  }
+
+  .top-pearl-palette {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, 40px);
+    align-items: center;
+    gap: 12px;
+  }
+
+  .top-pearl-button {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #332d27;
+  }
+
+  .top-pearl-button:hover {
+    background: transparent;
+    box-shadow: 0 0 0 3px #dcd3c6;
+  }
+
+  .top-pearl-button.is-selected {
+    background: transparent;
+    box-shadow: 0 0 0 2px #f8f5ef, 0 0 0 4px #886c42;
+  }
+
+  .top-pearl-swatch {
+    width: 40px;
+    height: 40px;
+    border: 2px solid #fffdfa;
+    border-radius: 50%;
+    background: var(--pearl-color);
+    box-shadow: 0 2px 5px rgba(51, 45, 39, 0.18);
+  }
+
+  .selected-pearl-name {
+    margin-top: 2px;
+    color: #766d62;
+    font-size: 12px;
+  }
+
+  .selected-pearl-name strong {
+    color: #332d27;
+    font-family: Georgia, serif;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .number-stepper {
+    display: grid;
+    grid-template-columns: 32px 72px 32px;
+    min-height: 36px;
+    overflow: hidden;
+    border-radius: 18px;
+    border: 1px solid #dcd3c6;
+    background: #fffdfa;
+  }
+
+  .stepper-button {
+    width: 32px;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    border-radius: 18px;
+    background: #fffdfa;
+    color: #886c42;
+    font-size: 20px;
+  }
+
+  .stepper-button:hover {
+    background: #f1ece2;
+    color: #332d27;
+  }
+
+  .stepper-value {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 5px;
+    min-width: 0;
+    height: 34px;
+    border-right: 1px solid #eee8de;
+    border-left: 1px solid #eee8de;
+    outline: none;
+    color: #332d27;
+  }
+
+  .stepper-value strong {
+    align-self: center;
+    font-family: Georgia, serif;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .stepper-value small {
+    align-self: center;
+    color: #9b9286;
+    font-size: 10px;
   }
 
   .section-heading {
@@ -437,6 +1056,17 @@ const initialNecklace: Necklace = {
     background: #6f5634;
   }
 
+  .secondary-button {
+    border-color: #886c42;
+    background: transparent;
+    color: #886c42;
+  }
+
+  .secondary-button:hover {
+    background: #886c42;
+    color: #fffdfa;
+  }
+
   .row {
     display: grid;
     gap: 14px;
@@ -469,6 +1099,204 @@ const initialNecklace: Necklace = {
     font-weight: 500;
   }
 
+  .pearl-editor {
+    display: grid;
+    gap: 10px;
+  }
+
+  .sequence-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .bead-count {
+    color: #9b9286;
+    font-size: 11px;
+  }
+
+  .pearl-sequence {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 58px;
+    padding: 12px;
+    overflow-x: auto;
+    border: 0;
+    border-radius: 14px;
+    background: #f1ece2;
+  }
+
+  .sequence-pearl {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    margin: 0;
+    padding: 0;
+    border: 2px solid #fffdfa;
+    border-radius: 50%;
+    background: var(--pearl-color);
+    box-shadow: 0 2px 5px rgba(51, 45, 39, 0.18);
+  }
+
+  .sequence-pearl:hover {
+    transform: translateY(-2px);
+  }
+
+  .row-pearl-picker {
+    display: flex;
+    align-items: center;
+    min-width: 34px;
+    flex: 0 0 auto;
+  }
+
+  .row-pearl-picker.is-open {
+    flex: 1 1 280px;
+    min-width: 0;
+  }
+
+  .sequence-add {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px dashed #886c42;
+    border-radius: 50%;
+    background: #fffdfa;
+    color: #886c42;
+    font-size: 20px;
+    line-height: 1;
+  }
+
+  .sequence-add:hover {
+    border-style: solid;
+    background: #886c42;
+    color: #fffdfa;
+  }
+
+  .pearl-popover {
+    position: fixed;
+    z-index: 100;
+    top: min(var(--popover-y), calc(100vh - 150px));
+    left: var(--popover-x);
+    width: 240px;
+    padding: 10px;
+    border: 1px solid #dcd3c6;
+    border-radius: 12px;
+    background: #fffdfa;
+    box-shadow: 0 18px 40px rgba(51, 45, 39, 0.18);
+  }
+
+  .popover-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    color: #766d62;
+    font-size: 11px;
+  }
+
+  .popover-close {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #766d62;
+    font-size: 17px;
+  }
+
+  .popover-close:hover {
+    background: #eee8de;
+  }
+
+  .popover-colors {
+    display: grid;
+    grid-template-columns: repeat(6, 34px);
+    gap: 5px;
+  }
+
+  .popover-colors .row-pearl-option {
+    width: 34px;
+    height: 34px;
+    flex-basis: 34px;
+  }
+
+  .popover-colors .row-pearl-swatch {
+    width: 30px;
+    height: 30px;
+  }
+
+  .row-pearl-option {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #332d27;
+  }
+
+  .row-pearl-option:hover,
+  .row-pearl-option.is-selected {
+    background: transparent;
+    box-shadow: 0 0 0 2px #886c42;
+  }
+
+  .row-pearl-swatch {
+    width: 36px;
+    height: 36px;
+    border: 2px solid #fffdfa;
+    border-radius: 50%;
+    background: var(--pearl-color);
+  }
+
+  .hold-hint {
+    margin: -2px 0 0;
+    color: #9b9286;
+    font-size: 11px;
+  }
+
+  .empty-sequence {
+    color: #9b9286;
+    font-size: 12px;
+  }
+
+  .row-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  .row-icon-button {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 1px solid #dcd3c6;
+    border-radius: 50%;
+    background: #fffdfa;
+    color: #886c42;
+    font-size: 16px;
+  }
+
+  .row-icon-button:hover {
+    border-color: #886c42;
+    background: #886c42;
+    color: #fffdfa;
+  }
+
+  .row-icon-button:disabled {
+    cursor: default;
+    opacity: 0.45;
+  }
+
+  .row-remove {
+    color: #985348;
+  }
+
   .preview {
     align-self: start;
     position: sticky;
@@ -479,51 +1307,6 @@ const initialNecklace: Necklace = {
 
   .preview h2 {
     margin-bottom: 28px;
-  }
-
-  .necklace-preview {
-    display: grid;
-    gap: 22px;
-    min-height: 250px;
-    place-content: center;
-    padding: 28px 12px;
-    border-radius: 0;
-    background: #f8f5ef;
-  }
-
-  .preview-row {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    min-width: 180px;
-    padding: 8px 0;
-  }
-
-  .strand {
-    position: absolute;
-    top: 50%;
-    right: 0;
-    left: 0;
-    height: 4px;
-    transform: translateY(-50%);
-    border-radius: 999px;
-    background: #8d5b3f;
-    box-shadow: 0 1px 2px rgba(47, 36, 31, 0.18);
-  }
-
-  .preview-pearl {
-    position: relative;
-    z-index: 1;
-    display: block;
-    width: var(--pearl-size);
-    height: var(--pearl-size);
-    min-width: 10px;
-    min-height: 10px;
-    border: 2px solid rgba(47, 36, 31, 0.18);
-    border-radius: 50%;
-    background: var(--pearl-color);
-    box-shadow: 0 3px 6px rgba(47, 36, 31, 0.22);
   }
 
   .share-panel {
@@ -537,6 +1320,7 @@ const initialNecklace: Necklace = {
   }
 
   .share-code {
+    display: none;
     margin-bottom: 12px;
     overflow: hidden;
     color: #75655d;
@@ -544,6 +1328,10 @@ const initialNecklace: Necklace = {
     font-size: 0.7rem;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .share-code.is-visible {
+    display: block;
   }
 
   .share-actions {
@@ -560,6 +1348,7 @@ const initialNecklace: Necklace = {
   }
 
   .data-preview {
+    display: none;
     max-height: 220px;
     margin: 24px 0 0;
     overflow: auto;
@@ -600,6 +1389,10 @@ const initialNecklace: Necklace = {
     .menu,
     .preview {
       padding: 24px;
+    }
+
+    .top-pearl-palette {
+      grid-template-columns: repeat(auto-fit, 40px);
     }
 
     .preview {
