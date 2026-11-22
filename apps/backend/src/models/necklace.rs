@@ -1,18 +1,19 @@
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, TS)]
 pub struct PearlId(pub String);
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, TS)]
 pub struct RibbonId(pub String);
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, TS)]
 pub struct EndBandId(pub String);
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, TS)]
 pub struct Millimeters(pub f32);
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash, TS)]
 #[serde(rename_all = "lowercase")]
 pub enum Color {
     Transparent,
@@ -42,13 +43,17 @@ pub struct Necklace {
     pub end_length_mm: Millimeters,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// A single row in a necklace design.
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../frontend/src/types/")]
 pub struct NecklaceRow {
     pub pattern: Vec<PearlId>,
     pub full_length_mm: Millimeters,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// A pearl and the visual properties used when rendering or building it.
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../frontend/src/types/")]
 pub struct Pearl {
     pub id: PearlId,
     pub color: Color,
