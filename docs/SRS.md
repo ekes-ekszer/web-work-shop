@@ -15,9 +15,9 @@ folk-dance necklaces. Buyers should be able to configure a necklace and share
 its specification with the artisan who will make it.
 
 This specification separates the intended product from the current
-implementation. The repository currently contains a basic Astro frontend and a
-small Rust/Axum backend; the necklace customizer and the other product features
-described below are not implemented yet.
+implementation. The repository currently contains a basic Astro frontend and
+Rust data models with generated TypeScript bindings. The necklace customizer
+and the other product features described below are not implemented yet.
 
 ### 1.1 In Scope
 
@@ -69,7 +69,7 @@ implementation.
 
 ## 4. Non-Functional Requirements
 
-* **Maintainability:** The frontend and backend shall remain independently buildable and runnable.
+* **Maintainability:** The frontend shall remain independently buildable and runnable.
 * **Compatibility:** The application shall be usable in current desktop and mobile web browsers when the product UI is implemented.
 * **Security:** Any future persistence or sharing feature shall protect customer design data and restrict access to saved designs as appropriate. Authentication and the required access model remain to be specified.
 * **Performance and availability targets:** Numerical targets have not yet been established and shall be defined before production deployment.
@@ -83,9 +83,8 @@ implementation.
 | Component | Current implementation |
 | :--- | :--- |
 | Frontend | Astro 7 application in `apps/frontend`, with the Astro React integration configured. |
-| Backend | Rust 2024 application using Axum and Tokio in `apps/backend`. |
 | Data storage | No database or persistent storage is configured. |
-| Local development | The root `justfile` provides commands to run, build, and check both applications. |
+| Local development | The root `justfile` provides commands to run, build, and check the frontend and data-model library. |
 
 ---
 
@@ -112,7 +111,7 @@ email services are not part of the current scope.
 
 ## 8. Delivery Roadmap
 
-- [x] **Foundation:** Establish the Astro frontend, Rust/Axum backend, and root development commands.
+- [x] **Foundation:** Establish the Astro frontend, Rust data models, and root development commands.
 - [ ] **Design experience:** Implement strand and bead configuration with a live preview.
 - [ ] **Design summary:** Produce an artisan-readable specification.
 - [ ] **Persistence and sharing:** Select and implement storage and a way to share saved designs.

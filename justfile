@@ -18,11 +18,8 @@ pr:
 frontend:
     npm --prefix apps/frontend run dev
 
-backend:
-    cargo run --manifest-path apps/backend/Cargo.toml
-
 dev:
-    (npm --prefix apps/frontend run dev) & (cargo watch --workdir apps/backend --watch src --watch Cargo.toml --watch Cargo.lock --exec test --exec run) & wait
+    (cargo watch --workdir apps/backend --watch src --watch Cargo.toml --watch Cargo.lock --exec test) & (npm --prefix apps/frontend run dev) & wait
 
 alias start := dev
 alias run := dev
