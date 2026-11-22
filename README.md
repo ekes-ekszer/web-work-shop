@@ -1,6 +1,6 @@
 # web-work-shop
 
-An Astro frontend with a Rust/Axum backend.
+An Astro frontend with Rust data models and generated TypeScript bindings.
 
 ## Prerequisites
 
@@ -74,28 +74,26 @@ The supported commit and pull request types and scopes are listed in
 
 ## Run in development
 
-Start both services with one command:
+Start the frontend development server with:
 
 ```sh
 just dev
 ```
 
 `just dev` watches backend Rust changes with `cargo-watch`. After each change,
-it regenerates the TypeScript bindings with `cargo test`, restarts the backend,
-and Astro hot reloads when the generated files change.
+it regenerates the TypeScript bindings with `cargo test`, and Astro hot reloads
+when the generated files change.
 
-The services are available at:
+The service is available at:
 
 - Frontend: http://localhost:4321
-- Backend: http://localhost:3000
 
-Press `Ctrl+C` to stop both services.
+Press `Ctrl+C` to stop the service.
 
-To run only one service:
+To run the frontend:
 
 ```sh
 just frontend
-just backend
 ```
 
 Frontend TypeScript types generated from Rust models are written to

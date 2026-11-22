@@ -34,7 +34,8 @@ pub enum Color {
     RoseGold,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../frontend/src/types/")]
 pub struct Necklace {
     pub rows: Vec<NecklaceRow>,
     pub ribbon: RibbonId,

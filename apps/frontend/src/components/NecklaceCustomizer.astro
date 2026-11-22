@@ -3,14 +3,14 @@ import type { Necklace } from '../types/Necklace';
 import { media } from '../lib/media';
 
 const initialNecklace: Necklace = {
-  name: 'Hungarian folk necklace',
+  ribbon: 'red-ribbon',
+  end_band: 'gold-end-band',
+  end_pearl: 'gold-pearl',
+  end_length_mm: 25,
   rows: [
     {
-      pattern: 'Repeating red and white motif',
-      pearls: [
-        { size_mm: 8, color: '#b42318', pattern: 'Red accent' },
-        { size_mm: 6, color: '#f8fafc', pattern: 'White accent' },
-      ],
+      pattern: ['red', 'white', 'red'],
+      full_length_mm: 40,
     },
   ],
 };
@@ -69,13 +69,17 @@ const initialNecklace: Necklace = {
         const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
         const design = JSON.parse(new TextDecoder().decode(bytes));
         if (
-          typeof design.name !== 'string' ||
           !Array.isArray(design.rows) ||
+          typeof design.ribbon !== 'string' ||
+          typeof design.end_band !== 'string' ||
+          typeof design.end_pearl !== 'string' ||
+          typeof design.end_length_mm !== 'number' ||
           design.rows.some(
             (row) =>
               !row ||
               typeof row !== 'object' ||
-              !Array.isArray(row.pearls),
+                !Array.isArray(row.pattern) ||
+                typeof row.full_length_mm !== 'number',
           )
         ) {
           return null;
@@ -138,7 +142,10 @@ const initialNecklace: Necklace = {
 
   const render = () => {
     form.innerHTML = `
-      ${field('Necklace name', state.name, 'name')}
+      ${field('Ribbon ID', state.ribbon, 'ribbon')}
+      ${field('End band ID', state.end_band, 'end_band')}
+      ${field('End pearl ID', state.end_pearl, 'end_pearl')}
+      ${field('End length (mm)', state.end_length_mm, 'end_length_mm', 'number')}
       <div class="section-heading">
         <h2>Rows</h2>
         <button type="button" data-action="add-row">Add row</button>
@@ -148,39 +155,24 @@ const initialNecklace: Necklace = {
           (row, rowIndex) => `
             <fieldset class="row">
               <legend>Row ${rowIndex + 1}</legend>
-              ${field('Row pattern', row.pattern ?? '', `rows.${rowIndex}.pattern`)}
-              <div class="section-heading">
-                <h3>Pearls</h3>
-                <button type="button" data-action="add-pearl" data-row="${rowIndex}">Add pearl</button>
-              </div>
-              ${row.pearls
-                .map(
-                  (pearl, pearlIndex) => `
-                    <div class="pearl">
-                      <strong>Pearl ${pearlIndex + 1}</strong>
-                      ${field('Size (mm)', pearl.size_mm, `rows.${rowIndex}.pearls.${pearlIndex}.size_mm`, 'number')}
-                      ${field('Color', pearl.color, `rows.${rowIndex}.pearls.${pearlIndex}.color`, 'color')}
-                      ${field('Pattern', pearl.pattern ?? '', `rows.${rowIndex}.pearls.${pearlIndex}.pattern`)}
-                    </div>
-                  `,
-                )
-                .join('')}
+              ${field('Pearl IDs', row.pattern.join(', '), `rows.${rowIndex}.pattern`)}
+              ${field('Full length (mm)', row.full_length_mm, `rows.${rowIndex}.full_length_mm`, 'number')}
             </fieldset>
           `,
         )
         .join('')}
     `;
 
-    previewTitle.textContent = state.name;
+    previewTitle.textContent = 'Hungarian folk necklace';
     preview.innerHTML = state.rows
       .map(
         (row) => `
-          <div class="preview-row" title="${escapeHtml(row.pattern ?? '')}">
+          <div class="preview-row" title="${escapeHtml(row.pattern.join(', '))}">
             <span class="strand"></span>
-            ${row.pearls
+            ${row.pattern
               .map(
-                (pearl) =>
-                  `<span class="preview-pearl" title="${escapeHtml(pearl.pattern ?? '')}" style="--pearl-color: ${escapeHtml(pearl.color)}; --pearl-size: ${Math.max(14, Math.min(42, pearl.size_mm * 3))}px"></span>`,
+                (pearlId) =>
+                  `<span class="preview-pearl" title="${escapeHtml(pearlId)}"></span>`,
               )
               .join('')}
           </div>
@@ -200,7 +192,14 @@ const initialNecklace: Necklace = {
       target = target[part];
     });
     const key = parts.at(-1);
-    if (key) target[key] = key === 'size_mm' ? Number(value) : value || null;
+    if (key) {
+      target[key] =
+        key === 'pattern'
+          ? value.split(',').map((item) => item.trim()).filter(Boolean)
+          : key === 'full_length_mm' || key === 'end_length_mm'
+            ? Number(value)
+            : value;
+    }
   };
 
   form.addEventListener('input', (event) => {
@@ -236,13 +235,7 @@ const initialNecklace: Necklace = {
     }
 
     if (button.dataset.action === 'add-row') {
-      state.rows.push({ pattern: null, pearls: [] });
-    } else if (button.dataset.action === 'add-pearl' && button.dataset.row) {
-      state.rows[Number(button.dataset.row)].pearls.push({
-        size_mm: 6,
-        color: '#b42318',
-        pattern: null,
-      });
+      state.rows.push({ pattern: [], full_length_mm: 40 });
     }
     render();
   });
