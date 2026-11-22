@@ -24,6 +24,9 @@ backend:
 dev:
     (npm --prefix apps/frontend run dev) & (cargo watch --workdir apps/backend --watch src --watch Cargo.toml --watch Cargo.lock --exec test --exec run) & wait
 
+alias start := dev
+alias run := dev
+
 build:
     npm --prefix apps/frontend run build
     cargo build --manifest-path apps/backend/Cargo.toml

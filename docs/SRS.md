@@ -91,7 +91,7 @@ implementation.
 
 ## 6. User Interface References
 
-* **Figma Board:** [Link to Figma board](https://www.figma.com/design/uZC856mBdonOGqfALBivDy/Untitled?node-id=2-3123&t=kDC6FXlzifmRpawb-1)
+* **Figma Board:** [Ékes Ékszer design](https://www.figma.com/design/uZC856mBdonOGqfALBivDy/Untitled?node-id=0-1&p=f&t=L9xWF1Tnb3o1mp65-0)
 * **Planned primary components:**
   * Necklace preview.
   * Strand and bead selection controls.
